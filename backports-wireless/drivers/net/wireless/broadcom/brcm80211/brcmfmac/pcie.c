@@ -51,7 +51,7 @@ enum brcmf_pcie_state {
 BRCMF_FW_DEF(43602, "brcmfmac43602-pcie");
 BRCMF_FW_DEF(4350, "brcmfmac4350-pcie");
 BRCMF_FW_DEF(4350C, "brcmfmac4350c2-pcie");
-CY_FW_DEF(4356, "cyfmac4356-pcie");
+BRCMF_FW_DEF(4356, "brcmfmac4356-pcie");
 CY_FW_DEF(43570, "cyfmac43570-pcie");
 BRCMF_FW_DEF(4358, "brcmfmac4358-pcie");
 CY_FW_DEF(4359, "cyfmac4359-pcie");

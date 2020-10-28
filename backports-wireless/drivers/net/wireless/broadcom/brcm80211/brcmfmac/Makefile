@@ -6,8 +6,8 @@
 #
 
 ccflags-y += \
-	-I $(src) \
-	-I $(src)/../include
+	-I$(backport_srctree)/drivers/net/wireless/broadcom/brcm80211/brcmfmac  \
+	-I$(backport_srctree)/drivers/net/wireless/broadcom/brcm80211/include
 
 obj-$(CPTCFG_BRCMFMAC) += brcmfmac.o
 brcmfmac-objs += \
