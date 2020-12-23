@@ -205,6 +205,62 @@ done:
 	return err;
 }
 
+// From NV cypress source patches
+static int wifi_get_mac_address_dtb(const char *node_name,
+					const char *property_name,
+					unsigned char *mac_addr)
+{
+	struct device_node *np = of_find_node_by_path(node_name);
+	const char *mac_str = NULL;
+	int values[6] = {0};
+	unsigned char mac_temp[6] = {0};
+	int i, ret = 0;
+
+	if (!np)
+		return -EADDRNOTAVAIL;
+
+	/* If the property is present but contains an invalid value,
+	 * then something is wrong. Log the error in that case.
+	 */
+	if (of_property_read_string(np, property_name, &mac_str)) {
+		ret = -EADDRNOTAVAIL;
+		goto err_out;
+	}
+
+	/* The DTB property is a string of the form xx:xx:xx:xx:xx:xx
+	 * Convert to an array of bytes.
+	 */
+	if (sscanf(mac_str, "%x:%x:%x:%x:%x:%x",
+		&values[0], &values[1], &values[2],
+		&values[3], &values[4], &values[5]) != 6) {
+		ret = -EINVAL;
+		goto err_out;
+	}
+
+	for (i = 0; i < 6; ++i)
+		mac_temp[i] = (unsigned char)values[i];
+
+	if (!is_valid_ether_addr(mac_temp)) {
+		ret = -EINVAL;
+		goto err_out;
+	}
+
+	memcpy(mac_addr, mac_temp, 6);
+
+	of_node_put(np);
+
+	return ret;
+
+err_out:
+	brcmf_err("%s: bad mac address at %s/%s: %s.\n",
+		__func__, node_name, property_name,
+		(mac_str) ? mac_str : "null");
+
+	of_node_put(np);
+
+	return ret;
+}
+
 int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
 {
 	struct brcmf_pub *drvr = ifp->drvr;
@@ -213,19 +269,27 @@ int brcmf_c_preinit_dcmds(struct brcmf_if *ifp)
 	struct brcmf_bus *bus;
 	struct brcmf_rev_info_le revinfo;
 	struct brcmf_rev_info *ri;
+	struct sockaddr *sa;
 	char *clmver;
 	char *ptr;
 	s32 err;
 	struct eventmsgs_ext *eventmask_msg = NULL;
 	u8 msglen;
 
-	/* retrieve mac addresses */
-	err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
-				       sizeof(ifp->mac_addr));
-	if (err < 0) {
-		bphy_err(drvr, "Retrieving cur_etheraddr failed, %d\n", err);
-		goto done;
+	err = wifi_get_mac_address_dtb("/chosen", "nvidia,wifi-mac", ifp->mac_addr);
+	if (!err) {
+		err = brcmf_fil_iovar_data_set(ifp, "cur_etheraddr", ifp->mac_addr,
+						   sizeof(ifp->mac_addr));
+	} else {
+		/* retrieve mac addresses */
+		err = brcmf_fil_iovar_data_get(ifp, "cur_etheraddr", ifp->mac_addr,
+						   sizeof(ifp->mac_addr));
+		if (err < 0) {
+			bphy_err(drvr, "Retrieving cur_etheraddr failed, %d\n", err);
+			goto done;
+		}
 	}
+
 	memcpy(ifp->drvr->mac, ifp->mac_addr, sizeof(ifp->drvr->mac));
 	memcpy(ifp->drvr->wiphy->perm_addr, ifp->drvr->mac, ETH_ALEN);
 
