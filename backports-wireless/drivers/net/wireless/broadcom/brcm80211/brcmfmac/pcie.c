@@ -2377,6 +2377,19 @@ brcmf_pcie_remove(struct pci_dev *pdev)
 
 #ifdef CONFIG_PM
 
+static bool brcmf_is_wake_enabled(void) {
+	struct device_node *np = of_find_node_by_path("/rtc");
+	u32 wake_val = 0;
+
+	if (!np)
+		return false;
+
+	(void)of_property_read_u32(np, "nvidia,pmc-wakeup", &wake_val);
+
+	of_node_put(np);
+
+	return wake_val != 0x0;
+}
 
 static int brcmf_pcie_pm_enter_D3(struct device *dev)
 {
@@ -2399,20 +2412,27 @@ static int brcmf_pcie_pm_enter_D3(struct device *dev)
 	if (!retry && config->pm_state == BRCMF_CFG80211_PM_STATE_SUSPENDING)
 		brcmf_err(bus, "timed out wait for cfg80211 suspended\n");
 
+
 	brcmf_pcie_fwcon_timer(devinfo, false);
 
 	brcmf_bus_change_state(bus, BRCMF_BUS_DOWN);
 
-	devinfo->mbdata_completed = false;
-	brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D3_INFORM);
-
-	wait_event_timeout(devinfo->mbdata_resp_wait, devinfo->mbdata_completed,
-			   BRCMF_PCIE_MBDATA_TIMEOUT);
-	if (!devinfo->mbdata_completed)
-		brcmf_dbg(PCIE, "Timeout on response for entering D3 substate\n");
-
 	devinfo->state = BRCMFMAC_PCIE_STATE_DOWN;
 
+	if (brcmf_is_wake_enabled()) {
+		devinfo->mbdata_completed = false;
+		brcmf_pcie_send_mb_data(devinfo, BRCMF_H2D_HOST_D3_INFORM);
+
+		wait_event_timeout(devinfo->mbdata_resp_wait, devinfo->mbdata_completed,
+				   BRCMF_PCIE_MBDATA_TIMEOUT);
+		if (!devinfo->mbdata_completed)
+			brcmf_dbg(PCIE, "Timeout on response for entering D3 substate\n");
+	} else {
+		brcmf_pcie_intr_disable(devinfo);
+
+		brcmf_pcie_bus_console_read(devinfo, true);
+		brcmf_pcie_reset_device(devinfo);
+	}
 	return 0;
 }
 
