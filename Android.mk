@@ -4,12 +4,10 @@ CYPRESS-FMAC-UPSTREAM_PATH := kernel/nvidia/cypress-fmac-upstream
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE               := cypress-fmac-upstream
-LOCAL_MODULE_SUFFIX        := .ko
-LOCAL_MODULE_RELATIVE_PATH := modules/cypress-fmac-upstream
-LOCAL_MODULE_CLASS         := SHARED_LIBRARIES
-LOCAL_MULTILIB             := 32
-LOCAL_VENDOR_MODULE        := true
+LOCAL_MODULE        := cypress-fmac-upstream
+LOCAL_MODULE_SUFFIX := .ko
+LOCAL_MODULE_CLASS  := ETC
+LOCAL_MODULE_PATH   := $(TARGET_OUT_VENDOR)/lib/modules/cypress-fmac-upstream
 
 _fmac_upstream_intermediates := $(call intermediates-dir-for,$(LOCAL_MODULE_CLASS),$(LOCAL_MODULE))
 _fmac_upstream_ko := $(_fmac_upstream_intermediates)/$(LOCAL_MODULE)$(LOCAL_MODULE_SUFFIX)
