@@ -19,6 +19,7 @@ $(_fmac_upstream_ko): $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(BOARD_KERNEL_IMAG
 	@mkdir -p $(dir $@)
 	@mkdir -p $(KERNEL_MODULES_OUT)/lib/modules/cypress-fmac-upstream
 	@cp -R $(CYPRESS-FMAC-UPSTREAM_PATH)/backports-wireless/* $(_fmac_upstream_intermediates)/
+	@chmod +x $(_fmac_upstream_intermediates)/kconf/lxdialog/check-lxdialog.sh
 	$(hide) +$(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(_fmac_upstream_intermediates) ARCH=arm64 $(KERNEL_CROSS_COMPILE) KLIB=$(KERNEL_MODULES_OUT)/lib/modules KLIB_BUILD=$(KERNEL_OUT_RELATIVE) defconfig-brcmfmac
 	$(hide) +$(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(_fmac_upstream_intermediates) ARCH=arm64 $(KERNEL_CROSS_COMPILE) KLIB=$(KERNEL_MODULES_OUT)/lib/modules KLIB_BUILD=$(KERNEL_OUT_RELATIVE) modules
 	modules=$$(find $(_fmac_upstream_intermediates) -type f -name '*.ko'); \
