@@ -10,7 +10,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE        := cypress-fmac-upstream
 LOCAL_MODULE_SUFFIX := .ko
 LOCAL_MODULE_CLASS  := ETC
-LOCAL_MODULE_PATH   := $(TARGET_OUT_VENDOR)/lib/modules/cypress-fmac-upstream
+LOCAL_MODULE_PATH   := $(TARGET_OUT_VENDOR)/lib/modules
 
 _fmac_upstream_intermediates := $(call intermediates-dir-for,$(LOCAL_MODULE_CLASS),$(LOCAL_MODULE))
 _fmac_upstream_ko := $(_fmac_upstream_intermediates)/$(LOCAL_MODULE)$(LOCAL_MODULE_SUFFIX)
@@ -19,7 +19,7 @@ KERNEL_OUT_RELATIVE := ../../KERNEL_OBJ
 
 $(_fmac_upstream_ko): $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(BOARD_KERNEL_IMAGE_NAME)
 	@mkdir -p $(dir $@)
-	@mkdir -p $(KERNEL_MODULES_OUT)/lib/modules/cypress-fmac-upstream
+	@mkdir -p $(KERNEL_MODULES_OUT)/lib/modules
 	@cp -R $(CYPRESS-FMAC-UPSTREAM_PATH)/backports-wireless/* $(_fmac_upstream_intermediates)/
 	@chmod +x $(_fmac_upstream_intermediates)/kconf/lxdialog/check-lxdialog.sh
 	$(hide) +$(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(_fmac_upstream_intermediates) ARCH=arm64 $(KERNEL_CROSS_COMPILE) PERL5LIB=$(PERL5LIB) PERL=$(LINEAGE_TOOLS_PATH)/perl KLIB=$(KERNEL_MODULES_OUT)/lib/modules KLIB_BUILD=$(KERNEL_OUT_RELATIVE) defconfig-brcmfmac
@@ -27,7 +27,7 @@ $(_fmac_upstream_ko): $(KERNEL_OUT)/arch/$(KERNEL_ARCH)/boot/$(BOARD_KERNEL_IMAG
 	modules=$$(find $(_fmac_upstream_intermediates) -type f -name '*.ko'); \
 	for f in $$modules; do \
 		$(KERNEL_TOOLCHAIN_PATH)strip --strip-unneeded $$f; \
-		cp $$f $(KERNEL_MODULES_OUT)/lib/modules/cypress-fmac-upstream; \
+		cp $$f $(KERNEL_MODULES_OUT)/lib/modules; \
 	done;
 	touch $(_fmac_upstream_intermediates)/cypress-fmac-upstream.ko
 
